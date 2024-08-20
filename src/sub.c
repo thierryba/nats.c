@@ -39,25 +39,16 @@ static inline int _release(natsSubscription *sub) { return --(sub->refs); }
 
 bool testDrainAutoUnsubRace = false;
 
-static inline void _destroyControlMessage(natsMsg *msg)
-{
-    if (msg != NULL)
-    {
-        natsMsg_clearNoDestroy(msg);
-        natsMsg_Destroy(msg);
-    }
-}
-
 static inline void _freeControlMessages(natsSubscription *sub)
 {
     if (sub->control == NULL)
         return;
 
-    _destroyControlMessage(sub->control->sub.timeout);
-    _destroyControlMessage(sub->control->sub.close);
-    _destroyControlMessage(sub->control->sub.drain);
-    _destroyControlMessage(sub->control->batch.expired);
-    _destroyControlMessage(sub->control->batch.missedHeartbeat);
+    natsMsg_Destroy(sub->control->sub.timeout);
+    natsMsg_Destroy(sub->control->sub.close);
+    natsMsg_Destroy(sub->control->sub.drain);
+    natsMsg_Destroy(sub->control->batch.expired);
+    natsMsg_Destroy(sub->control->batch.missedHeartbeat);
     NATS_FREE(sub->control);
 }
 
@@ -66,7 +57,7 @@ static inline natsStatus _createControlMessage(natsMsg **msg, natsSubscription *
     natsStatus s = natsMsg_create(msg, NULL, 0, NULL, 0, NULL, 0, -1);
     if (s == NATS_OK)
     {
-        natsMsg_setNoDestroy(*msg);
+        natsMsg_addRef(msg);
         (*msg)->sub = sub;
     }
     return s;

@@ -16,6 +16,7 @@
 
 #include "status.h"
 #include "gc.h"
+#include <stdatomic.h>
 
 #define HDR_LINE_PRE        "NATS/1.0"
 #define HDR_LINE_PRE_LEN    (8)
@@ -37,10 +38,8 @@
 #define natsMsg_isAcked(m)          (((m)->flags &   (1 << 1)) != 0)
 #define natsMsg_clearAcked(m)       ((m)->flags  &= ~(1 << 1))
 
-#define natsMsg_setNoDestroy(m)     ((m)->flags  |=  (1 << 2))
-#define natsMsg_isNoDestroy(m)      (((m)->flags &   (1 << 2)) != 0)
-#define natsMsg_clearNoDestroy(m)   ((m)->flags  &= ~(1 << 2))
-#define natsMsg_noDestroyFlag       (1 << 2)
+#define natsMsg_addRef(m)           ((m)->refCount++)
+#define natsMsg_removeRef(m)        (--(m)->refCount)
 
 #define natsMsg_setTimeout(m)       ((m)->flags  |=  (1 << 3))
 #define natsMsg_isTimeout(m)        (((m)->flags &   (1 << 3)) != 0)
@@ -65,6 +64,7 @@ struct __natsMsg
     int                 hdrLen;
     int                 wsz;
     int                 flags;
+    atomic_int          refCount;
     uint64_t            seq;
     int64_t             time;
 

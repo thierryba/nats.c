@@ -680,7 +680,7 @@ natsMsg_Destroy(natsMsg *msg)
     if (msg == NULL)
         return;
 
-    if (natsMsg_isNoDestroy(msg))
+    if (natsMsg_removeRef(msg))
         return;
 
     if (natsGC_collect((natsGCItem *) msg))
@@ -788,6 +788,7 @@ natsMsg_createWithPadding(natsMsg **newMsg,
     msg->headers    = NULL;
     msg->sub        = NULL;
     msg->next       = NULL;
+    msg->refCount   = 1;
     msg->seq        = 0;
     msg->time       = 0;
 

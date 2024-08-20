@@ -1246,13 +1246,12 @@ _autoAckCB(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void *closur
 {
     jsSub   *jsi = (jsSub*) closure;
 
-    natsMsg_setNoDestroy(msg);
+    natsMsg_addRef(msg);
 
     // Invoke user callback
     (jsi->usrCb)(nc, sub, msg, jsi->usrCbClosure);
 
     natsMsg_Ack(msg, NULL);
-    natsMsg_clearNoDestroy(msg);
     natsMsg_Destroy(msg);
 }
 
